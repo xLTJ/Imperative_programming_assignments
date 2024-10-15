@@ -24,7 +24,7 @@ int main() {
     return EXIT_SUCCESS;
 }
 
-// Encapsulated the entire calculator into its own function because the assignment told me to do that.
+// Encapsulated the entire calculator and dialogue into its own function because the assignment told me to do that.
 double run_calculator() {
     // Initialisation ------------------------------------------
     double acc, current_operand;
