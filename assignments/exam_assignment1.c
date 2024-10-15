@@ -7,8 +7,9 @@
 #define UNARY_OPERATORS "#%!q"
 #define EXIT_CHARACTER 'q'
 
-void clear_input();
+double run_calculator();
 
+void clear_input();
 int scan_data(char* operator, double* operand);
 void handle_invalid_input(char* error_message, char* operator, double* operand);
 void do_next_op(double* acc, char operator, double operand);
@@ -17,6 +18,14 @@ void welcome_message();
 
 
 int main() {
+    double final_result = run_calculator();
+
+    printf("Ended Calculations\nFinal Result: %lf", final_result);
+    return EXIT_SUCCESS;
+}
+
+// Encapsulated the entire calculator into its own function because the assignment told me to do that.
+double run_calculator() {
     // Initialisation ------------------------------------------
     double acc, current_operand;
     char current_operator = '0';
@@ -31,7 +40,6 @@ int main() {
     }
 
     // Calculator ---------------------------------------------
-
     while (current_operator != EXIT_CHARACTER) {
         scan_data(&current_operator, &current_operand);
 
@@ -40,7 +48,7 @@ int main() {
         printf("Current Result: %lf\n\n", acc);
     }
 
-    printf("Ended Calculations\nFinal Result: %lf", acc);
+    return acc;
 }
 
 // This function is used to clear the user inputs.
