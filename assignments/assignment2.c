@@ -64,7 +64,7 @@ int main() {
     // Output --------------------------------------------------------------------
 
     if (digit_counter > 0) {
-        printf("\nThe digit '%d' is in %d numbers between 1 - %d", n, c, digit_counter);
+        printf("\nThe digit '%d' is in %d numbers between 1 - %d", c, digit_counter, n);
 
     } else {
         printf("The digit '%d' is not in any number between 1 - %d", n, c);
