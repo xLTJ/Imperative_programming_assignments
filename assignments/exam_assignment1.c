@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
@@ -21,7 +20,7 @@ int main() {
     double final_result = run_calculator();
 
     printf("Ended Calculations\nFinal Result: %lf", final_result);
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 // Encapsulated the entire calculator and dialogue into its own function because the assignment told me to do that.
@@ -41,9 +40,11 @@ double run_calculator() {
 
     // Calculator ---------------------------------------------
     while (current_operator != EXIT_CHARACTER) {
-        scan_data(&current_operator, &current_operand);
 
-        do_next_op(&acc, current_operator, current_operand);
+        // Handles the user input, and only does the next operation if the scan_data function returns 0 (indicating there were no errors)
+        if (scan_data(&current_operator, &current_operand) == 0) {
+            do_next_op(&acc, current_operator, current_operand);
+        }
 
         printf("Current Result: %lf\n\n", acc);
     }
@@ -64,14 +65,14 @@ int scan_data(char* operator, double* operand) {
     // Scans for operator and validates if it's a char
     if (!scanf(" %c", operator)) {
         handle_invalid_input("Invalid Input: Operator must be a single character (char)", operator, operand);
-        return EXIT_FAILURE;
+        return 1;
     }
 
     clear_input();
 
     // Checks if the operator is a unary operator (by checking if it's in the unary operator string), in which case nothing else has to be done.
     if (strchr(UNARY_OPERATORS, *operator) != NULL) {
-        return EXIT_SUCCESS;
+        return 0;
     }
 
     // Checks if the operator is a binary operator, in which case the user needs to input an operand as well
@@ -85,13 +86,13 @@ int scan_data(char* operator, double* operand) {
             printf("Enter a different operand:");
 
         }
-        return EXIT_SUCCESS;
+        return 0;
 
     }
 
     // If the operator is neither among the binary or unary ones, it's not a valid operator
     handle_invalid_input("Invalid Input: Entered Operator is not among accepted operators", operator, operand);
-    return EXIT_FAILURE;
+    return 1;
 
 }
 
@@ -128,7 +129,7 @@ void do_next_op(double* acc, char operator, double operand) {
         case '!':
             *acc = 1 / *acc;
             break;
-        case '0': case EXIT_CHARACTER:
+        case EXIT_CHARACTER:
             break;
         default:
             printf("Something went wrong :c\n");
