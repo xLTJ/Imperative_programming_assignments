@@ -68,8 +68,6 @@ int scan_data(char* operator, double* operand) {
         return 1;
     }
 
-    clear_input();
-
     // Checks if the operator is a unary operator (by checking if it's in the unary operator string), in which case nothing else has to be done.
     if (strchr(UNARY_OPERATORS, *operator) != NULL) {
         return 0;
@@ -81,10 +79,9 @@ int scan_data(char* operator, double* operand) {
 
         // Keeps asking the user for an operand until it's a valid input
         while (!scanf(" %lf", operand)) {
-            handle_invalid_input("Invalid Input: Operand must be a number (double)", operator, operand);
-            clear_input();
+            printf("Invalid Input: Operand must be a number (double)\n");
             printf("Enter a different operand:");
-
+            clear_input();
         }
         return 0;
 
@@ -101,6 +98,7 @@ void handle_invalid_input(char* error_message, char* operator, double* operand) 
     printf("%s\n\n", error_message);
     *operator = '0';
     *operand = 0.0;
+    clear_input();
 }
 
 void do_next_op(double* acc, char operator, double operand) {
