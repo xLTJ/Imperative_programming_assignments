@@ -1,5 +1,13 @@
+/*
+ * Navn: Lucas Ta Jensen
+ * Email: ltje24@student.aau.dk
+ * Gruppe: 2
+ * Studieretning: Cyber- og Computerteknologi
+*/
+
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <math.h>
 
 #define BINARY_OPERATORS "+-*/^"
@@ -38,6 +46,8 @@ double run_calculator() {
         clear_input();
     }
 
+    clear_input();
+
     // Calculator ---------------------------------------------
     while (current_operator != EXIT_CHARACTER) {
 
@@ -65,12 +75,15 @@ int scan_data(char* operator, double* operand) {
     // Scans for operator and validates if it's a char
     if (!scanf(" %c", operator)) {
         handle_invalid_input("Invalid Input: Operator must be a single character (char)", operator, operand);
-        return 1;
+        clear_input();
+        return EXIT_FAILURE;
     }
+
+    clear_input();
 
     // Checks if the operator is a unary operator (by checking if it's in the unary operator string), in which case nothing else has to be done.
     if (strchr(UNARY_OPERATORS, *operator) != NULL) {
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     // Checks if the operator is a binary operator, in which case the user needs to input an operand as well
@@ -83,13 +96,14 @@ int scan_data(char* operator, double* operand) {
             printf("Enter a different operand:");
             clear_input();
         }
-        return 0;
+
+        return EXIT_SUCCESS;
 
     }
 
     // If the operator is neither among the binary or unary ones, it's not a valid operator
     handle_invalid_input("Invalid Input: Entered Operator is not among accepted operators", operator, operand);
-    return 1;
+    return EXIT_FAILURE;
 
 }
 
@@ -98,7 +112,6 @@ void handle_invalid_input(char* error_message, char* operator, double* operand) 
     printf("%s\n\n", error_message);
     *operator = '0';
     *operand = 0.0;
-    clear_input();
 }
 
 void do_next_op(double* acc, char operator, double operand) {
@@ -113,13 +126,19 @@ void do_next_op(double* acc, char operator, double operand) {
             *acc *= operand;
             break;
         case '/':
-            *acc /= operand;
+            if (operand != 0) {
+                *acc /= operand;
+            }
+
             break;
         case '^':
             *acc = pow(*acc, operand);
             break;
         case '#':
-            *acc = sqrt(*acc);
+            if (*acc > 0) {
+                *acc = sqrt(*acc);
+            }
+
             break;
         case '%':
             *acc *= -1;
@@ -130,7 +149,7 @@ void do_next_op(double* acc, char operator, double operand) {
         case EXIT_CHARACTER:
             break;
         default:
-            printf("Something went wrong :c\n");
+            printf("Unexpected operator: %c\n", operator);
             break;
     }
 }
