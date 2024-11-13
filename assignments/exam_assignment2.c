@@ -220,7 +220,7 @@ int check_for_sets(int *dice_array, int array_size, int required_set_size) {
 
     // checks if there is a set for every number starting from the highest. if a set is found, set the points to the sum of the dice and exit the loop
     for (int i = 6; i > 0; i--) {
-        if (array_includes(dice_array, array_size, i) >= required_set_size, true) {
+        if (array_includes(dice_array, array_size, i, true) >= required_set_size) {
             points = i * required_set_size;
             break;
         }
@@ -234,10 +234,11 @@ int check_for_sets(int *dice_array, int array_size, int required_set_size) {
 // both types are 5 numbers from the start number, so the start number is the only thing we need to keep in mind
 int check_for_straights(int *dice_array, int array_size, int start_number) {
     if (start_number == 1) {
-        printf("Small straight: ");
+        printf(" Small straight: ");
     } else {
-        printf("Large straight: ");
+        printf(" Large straight: ");
     }
+    print_array(dice_array, array_size);
 
     int points;
 
