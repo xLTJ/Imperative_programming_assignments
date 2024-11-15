@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ctype.h>
 
 #define MIN_DICE 5
 #define MAX_DICE 50
@@ -43,24 +44,34 @@ void print_array(int *array, int array_size);
 
 int main() {
     int n;
+    char play_again = 'y';
 
     // setup
     srand(time(NULL));
 
-    printf("Welcome to Yatzy (kind of) !!\n\n");
-    printf("Enter how many dice you would like to play with (has to be 5 or more):\n");
-    while (!scanf("%i", &n) || n < MIN_DICE || n > MAX_DICE) {
-        printf("Invalid Input. Enter an int equal to 5 or more:\n");
+    while (play_again == 'y' || play_again == 'Y'){
+        printf("Welcome to Yatzy (kind of) !!\n\n");
+        printf("Enter how many dice you would like to play with (has to be 5 or more):\n");
+        while (!scanf("%i", &n) || n < MIN_DICE || n > MAX_DICE) {
+            printf("Invalid Input. Enter an int equal to 5 or more:\n");
+            clear_input();
+        }
+
+        // roll handling
+        int point_array[SCOREBOARD_SIZE];
+        int total_points = 0;
+
+        handle_rolls(n, point_array, &total_points);
+        print_score_board(point_array, total_points);
+
+
+        printf("Would you like to play again? Enter 'y' to play again, enter any other key to exit:\n");
         clear_input();
+
+        scanf("%c", &play_again);
     }
 
-    // roll handling
-    int point_array[SCOREBOARD_SIZE];
-    int total_points = 0;
-
-    handle_rolls(n, point_array, &total_points);
-    print_score_board(point_array, total_points);
-
+    printf("\nThanks for playing ^~^\n");
     return EXIT_SUCCESS;
 }
 
@@ -170,7 +181,7 @@ void print_score_board(int *point_array, int total_points) {
     current_point_index++;
     printf( " Yatzy: %i\n", point_array[current_point_index]);
 
-    printf("\n~~ Total Points: %i ~~", total_points);
+    printf("\n~~ Total Points: %i ~~\n\n", total_points);
 }
 
 // handles the dice roll for when you want to roll a specific value, and returns the awarded points
