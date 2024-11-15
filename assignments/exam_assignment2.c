@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <ctype.h>
 
 #define MIN_DICE 5
 #define MAX_DICE 50
@@ -208,7 +207,7 @@ int check_for_pairs(int *dice_array, int array_size, int required_pairs) {
     int points = 0;
     int found_pairs = 0;
 
-    // checks each number for pairs starting from the highest. if a pair is found add the sum of them to the points.
+    // checks each number for pairs starting from the highest as we want to use the highest value possible. if a pair is found add the sum of them to the points.
     // exit the loop when the required amount of pairs has been found
     for (int i = DICE_SIDES; i > 0; i--) {
         if (array_includes(dice_array, array_size, i, true) >= 2) {
@@ -274,6 +273,7 @@ int check_for_straights(int *dice_array, int array_size, int start_number) {
 }
 
 // handles the dice rolls for full house. the blank argument is there to make it compatible with the handle_roll function
+// a full house required a set of 3, and a pair. the same dice cannot be used for both. sets are checked first as these give more points
 int check_for_full_house(int *dice_array, int array_size, int blank) {
     printf(" Full House: ");
     print_array(dice_array, array_size);
