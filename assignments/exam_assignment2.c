@@ -5,14 +5,18 @@
  * Studieretning: Cyber- og Computerteknologi
 */
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
 #define MIN_DICE 5
-#define BONUS 50
+#define MAX_DICE 50
+#define DICE_SIDES 6
 #define SCOREBOARD_SIZE 16
+#define SMALL_STRAIGHT_POINTS 15
+#define LARGE_STRAIGHT_POINTS 20
+#define YATZE_POINTS 50
+#define BONUS 50
 
 // prototypes -----------------------------------------------------
 
@@ -20,16 +24,20 @@ int roll_die();
 int *roll_multiple_dice(int n);
 
 void handle_rolls(int number_of_dice, int *point_array, int *total_points);
+void handle_roll(int number_of_dice, int *point_array, int *total_points, int current_point_index, int (*check_function)(int*, int, int), int roll_argument);
 void print_score_board(int *point_array, int total_points);
+
+
 int check_for_matching_dice(int *dice_array, int array_size, int die_to_match);
 int check_for_pairs(int *dice_array, int array_size, int required_pairs);
 int check_for_sets(int *dice_array, int array_size, int required_set_size);
 int check_for_straights(int *dice_array, int array_size, int start_number);
+int check_for_full_house(int *dice_array, int array_size, int blank);
+int check_for_yatzy(int *dice_array, int array_size, int blank);
 
 void clear_input();
 int array_includes(int *array, int array_size, int value, bool find_all);
 void print_array(int *array, int array_size);
-int array_highest_value(int *array, int array_size, bool remove_largest_number);
 
 // main ----------------------------------------------------------
 
@@ -39,9 +47,9 @@ int main() {
     // setup
     srand(time(NULL));
 
-    printf("Welcome to Yatze (kind of) !!\n\n");
+    printf("Welcome to Yatzy (kind of) !!\n\n");
     printf("Enter how many dice you would like to play with (has to be 5 or more):\n");
-    while (!scanf("%i", &n) || n < MIN_DICE) {
+    while (!scanf("%i", &n) || n < MIN_DICE || n > MAX_DICE) {
         printf("Invalid Input. Enter an int equal to 5 or more:\n");
         clear_input();
     }
@@ -52,13 +60,15 @@ int main() {
 
     handle_rolls(n, point_array, &total_points);
     print_score_board(point_array, total_points);
+
+    return EXIT_SUCCESS;
 }
 
 // dice rolling -----------------------------------------------------
 
 // rolls a number between 1 and 6
 int roll_die() {
-    return (rand() % 6) + 1;
+    return (rand() % DICE_SIDES) + 1;
 }
 
 // rolls n dice, and returns the result in an array.
@@ -80,14 +90,9 @@ void handle_rolls(int number_of_dice, int *point_array, int *total_points) {
     printf("\n~~ Rolling Dice ~~\n");
     int current_point_index = 0;
 
-    // rolls for matching value
-    for (int i = current_point_index; i < 6; i++) {
-        int *dice_roll = roll_multiple_dice(number_of_dice);
-        int points_received = check_for_matching_dice(dice_roll, number_of_dice, i + 1);
-        point_array[current_point_index] = points_received;
-        *total_points += points_received;
-
-        free(dice_roll);
+    // rolls for matching value (one for each side of the dice)
+    for (int i = current_point_index; i < DICE_SIDES; i++) {
+        handle_roll(number_of_dice, point_array, total_points, current_point_index, check_for_matching_dice, i + 1);
         current_point_index++;
     }
 
@@ -99,36 +104,39 @@ void handle_rolls(int number_of_dice, int *point_array, int *total_points) {
 
     // rolls for pairs
     for (int i = 0; i < 2; i++) {
-        int *dice_roll = roll_multiple_dice(number_of_dice);
-        int points_received = check_for_pairs(dice_roll, number_of_dice, i + 1);
-        point_array[current_point_index] = points_received;
-        *total_points += points_received;
-
-        free(dice_roll);
+        handle_roll(number_of_dice, point_array, total_points, current_point_index, check_for_pairs, i + 1);
         current_point_index++;
     }
 
     // rolls for sets
     for (int i = 0; i < 2; i++) {
-        int *dice_roll = roll_multiple_dice(number_of_dice);
-        int points_received = check_for_sets(dice_roll, number_of_dice, i + 3);
-        point_array[current_point_index] = points_received;
-        *total_points += points_received;
-
-        free(dice_roll);
+        handle_roll(number_of_dice, point_array, total_points, current_point_index, check_for_sets, i + 3);
         current_point_index++;
     }
 
     // rolls for straights
     for (int i = 0; i < 2; i++) {
-        int *dice_roll = roll_multiple_dice(number_of_dice);
-        int points_received = check_for_straights(dice_roll, number_of_dice, i + 1);
-        point_array[current_point_index] = points_received;
-        *total_points += points_received;
-
-        free(dice_roll);
+        handle_roll(number_of_dice, point_array, total_points, current_point_index, check_for_straights, i + 1);
         current_point_index++;
     }
+
+    // rolls for full house
+    handle_roll(number_of_dice, point_array, total_points, current_point_index, check_for_full_house, 0);
+    current_point_index++;
+
+    // rolls for yatzy
+    handle_roll(number_of_dice, point_array, total_points, current_point_index, check_for_yatzy, 0);
+}
+
+// handles a roll based on a number of different parameters. used to minimize repetition
+void handle_roll(int number_of_dice, int *point_array, int *total_points, int current_point_index, int (*check_function)(int*, int, int), int roll_argument) {
+    int *dice_roll = roll_multiple_dice(number_of_dice);
+    int points_received = check_function(dice_roll, number_of_dice, roll_argument);
+
+    point_array[current_point_index] = points_received;
+    *total_points += points_received;
+
+    free(dice_roll);
 }
 
 // prints the scoreboard based on an array of points
@@ -136,7 +144,7 @@ void print_score_board(int *point_array, int total_points) {
     printf("\n~~ Score Board ~~\n");
     int current_point_index = 0;
 
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < DICE_SIDES; i++) {
         printf(" %i's: %i\n", i + 1, point_array[current_point_index]);
         current_point_index++;
     }
@@ -156,8 +164,11 @@ void print_score_board(int *point_array, int total_points) {
 
     printf(" Small straight: %i\n", point_array[current_point_index]);
     current_point_index++;
-    printf(" Large Straight: %i", point_array[current_point_index]);
+    printf(" Large Straight: %i\n", point_array[current_point_index]);
     current_point_index++;
+    printf(" Full House: %i\n", point_array[current_point_index]);
+    current_point_index++;
+    printf( " Yatzy: %i\n", point_array[current_point_index]);
 
     printf("\n~~ Total Points: %i ~~", total_points);
 }
@@ -183,26 +194,18 @@ int check_for_pairs(int *dice_array, int array_size, int required_pairs) {
     printf(" %i pairs: ", required_pairs);
     print_array(dice_array, array_size);
 
-    int pair_array[6];
-
-    // checks how many pairs there is of each number, and adds that to pair_array
-    for (int i = 0; i < 6; i++) {
-        pair_array[i] = array_includes(dice_array, array_size, i + 1, true) / 2;
-    }
-
-    int current_pair_amount = 0;
     int points = 0;
+    int found_pairs = 0;
 
-    // adds points per pair from the highest number to the lowest number. exists when the required number of pairs is met
-    for (int i = 5; i >= 0; i--) {
+    // checks each number for pairs starting from the highest. if a pair is found add the sum of them to the points.
+    // exit the loop when the required amount of pairs has been found
+    for (int i = DICE_SIDES; i > 0; i--) {
+        if (array_includes(dice_array, array_size, i, true) >= 2) {
+            points += i * 2;
+            found_pairs++;
+        }
 
-        // if there are more pairs of the number than remaining number of required pairs, only take the required pairs (also the parentheses are just for readability)
-        int pairs_to_take = (pair_array[i] > (required_pairs - current_pair_amount)) ? (required_pairs - current_pair_amount) : (pair_array[i]);
-
-        points += pairs_to_take * (i + 1) * 2;
-        current_pair_amount += pair_array[i];
-
-        if (current_pair_amount >= required_pairs) {
+        if (found_pairs >= required_pairs) {
             break;
         }
     }
@@ -219,7 +222,7 @@ int check_for_sets(int *dice_array, int array_size, int required_set_size) {
     int points = 0;
 
     // checks if there is a set for every number starting from the highest. if a set is found, set the points to the sum of the dice and exit the loop
-    for (int i = 6; i > 0; i--) {
+    for (int i = DICE_SIDES; i > 0; i--) {
         if (array_includes(dice_array, array_size, i, true) >= required_set_size) {
             points = i * required_set_size;
             break;
@@ -240,7 +243,7 @@ int check_for_straights(int *dice_array, int array_size, int start_number) {
     }
     print_array(dice_array, array_size);
 
-    int points;
+    int points = 0;
 
     // checks for every number required for a straight. if a number is not found exit the loop.
     for (int i = start_number; i < start_number + 5; i++) {
@@ -248,10 +251,73 @@ int check_for_straights(int *dice_array, int array_size, int start_number) {
             break;
         }
 
-        // if we are still in the loop in the last iteration, this means that all required values for a straight has been rolled
+        // if we are still in the loop in the last iteration, this means that all required values for a straight has been rolled.
         // then the points are set depending on if its a small or a large straight
         if (i == start_number + 4) {
-            points = start_number == 1 ? 15 : 20;
+            points = start_number == 1 ? SMALL_STRAIGHT_POINTS : LARGE_STRAIGHT_POINTS;
+        }
+    }
+
+    printf(" -- %i\n", points);
+    return points;
+}
+
+// handles the dice rolls for full house. the blank argument is there to make it compatible with the handle_roll function
+int check_for_full_house(int *dice_array, int array_size, int blank) {
+    printf(" Full House: ");
+    print_array(dice_array, array_size);
+
+    int points;
+    int set_value;
+
+    // checks if there is a set for every number starting from the highest.
+    // if a set is found, set the points to the sum of the dice and save the value used for sets.
+    for (int i = DICE_SIDES; i > 0; i--) {
+        if (array_includes(dice_array, array_size, i, true) >= 3) {
+            points = i * 3;
+            set_value = i;
+            break;
+        }
+
+        // if no set is found after the last value, return 0 points
+        if (i == 1) {
+            printf(" -- %i\n", 0);
+            return 0;
+        }
+    }
+
+    // for each number check if there are 5 or more of this value (in this case it can be used even if the value is used in a set, as there is both a set and a pair),
+    // or if the current number is not the number used for a set, check if there are 2 or more (in which case there is just a pair)
+    for (int i = DICE_SIDES; i > 0; i--) {
+        int dice_amount = array_includes(dice_array, array_size, i, true);
+        if (dice_amount >= 5 || (i != set_value && dice_amount >=2)) {
+            points += (i * 2);
+            break;
+        }
+
+        // if no pair is found after last value, return 0 points
+        if (i == 1) {
+            printf(" -- %i\n", 0);
+            return 0;
+        }
+    }
+
+    printf(" -- %i\n", points);
+    return points;
+}
+
+// handles the dice roll for yatze. the blank argument is there to make it compatible with the handle_roll function
+int check_for_yatzy(int *dice_array, int array_size, int blank) {
+    printf(" Yatzy: ");
+    print_array(dice_array, array_size);
+
+    int points = 0;
+
+    // checks every value if there are 5 of them, in which case a yatzy has been rolled
+    for (int i = DICE_SIDES; i > 0; i--) {
+        if (array_includes(dice_array, array_size, i, true) >= 5) {
+            points = YATZE_POINTS;
+            break;
         }
     }
 
@@ -291,23 +357,4 @@ void print_array(int *array, int array_size) {
         printf("%i ", array[i]);
     }
     printf("]");
-}
-
-// returns the largest value in an array. is also able to remove this value from the array if needed.
-int array_highest_value(int *array, int array_size, bool remove_largest_number) {
-    int largest_value = 0;
-    int largest_value_index = 0;
-
-    for (int i = 0; i < array_size; i++) {
-        if (array[i] > largest_value) {
-            largest_value = array[i];
-            largest_value_index = i;
-        }
-    }
-
-    if (remove_largest_number) {
-        array[largest_value_index] = -1;
-    }
-
-    return largest_value;
 }
