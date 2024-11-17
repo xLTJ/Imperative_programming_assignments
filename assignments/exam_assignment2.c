@@ -34,11 +34,13 @@ int check_for_pairs(int *dice_array, int array_size, int required_pairs);
 int check_for_sets(int *dice_array, int array_size, int required_set_size);
 int check_for_straights(int *dice_array, int array_size, int start_number);
 int check_for_full_house(int *dice_array, int array_size, int blank);
+int check_for_chance(int *dice_array, int array_size, int blank);
 int check_for_yatzy(int *dice_array, int array_size, int blank);
 
 void clear_input();
 int array_includes(int *array, int array_size, int value, bool find_all);
 void print_array(int *array, int array_size);
+int qsort_compare(const void* a, const void* b);
 
 // main ----------------------------------------------------------
 
@@ -85,7 +87,6 @@ int roll_die() {
 // rolls n dice, and returns the result in an array.
 int *roll_multiple_dice(int n) {
     int *dice_array = malloc(n * sizeof(int));
-
 
     for (int i = 0; i < n; i++) {
         dice_array[i] = roll_die();
@@ -135,6 +136,10 @@ void handle_rolls(int number_of_dice, int *point_array, int *total_points) {
     handle_roll(number_of_dice, point_array, total_points, current_point_index, check_for_full_house, 0);
     current_point_index++;
 
+    //rolls for chance
+    handle_roll(number_of_dice, point_array, total_points, current_point_index, check_for_chance, 0);
+    current_point_index++;
+
     // rolls for yatzy
     handle_roll(number_of_dice, point_array, total_points, current_point_index, check_for_yatzy, 0);
 }
@@ -179,6 +184,8 @@ void print_score_board(int *point_array, int total_points) {
     current_point_index++;
     printf(" Full House: %i\n", point_array[current_point_index]);
     current_point_index++;
+    printf(" Chance: %i\n", point_array[current_point_index]);
+    current_point_index++;
     printf( " Yatzy: %i\n", point_array[current_point_index]);
 
     printf("\n~~ Total Points: %i ~~\n\n", total_points);
@@ -211,9 +218,14 @@ int check_for_pairs(int *dice_array, int array_size, int required_pairs) {
     // checks each number for pairs starting from the highest as we want to use the highest value possible. if a pair is found add the sum of them to the points.
     // exit the loop when the required amount of pairs has been found
     for (int i = DICE_SIDES; i > 0; i--) {
-        if (array_includes(dice_array, array_size, i, true) >= 2) {
-            points += i * 2;
-            found_pairs++;
+        int dice_of_value = array_includes(dice_array, array_size, i, true);
+
+        // if there is 2 or more dice of the value, add points for each pair until the amount of found pairs is the same as required pairs
+        if (dice_of_value >= 2) {
+            for (int j = 0; j < dice_of_value / 2 && found_pairs < required_pairs; j++) {
+                points += i * 2;
+                found_pairs++;
+            }
         }
 
         if (found_pairs >= required_pairs) {
@@ -318,6 +330,23 @@ int check_for_full_house(int *dice_array, int array_size, int blank) {
     return points;
 }
 
+int check_for_chance(int *dice_array, int array_size, int blank) {
+    printf( "Chance: ");
+    print_array(dice_array, array_size);
+
+    int points = 0;
+
+    qsort(dice_array, array_size, sizeof(int), qsort_compare);
+
+    for (int i = 0; i < 5; i++) {
+        points += dice_array[i];
+    }
+
+    printf(" -- %i\n", points);
+
+    return points;
+}
+
 // handles the dice roll for yatze. the blank argument is there to make it compatible with the handle_roll function
 int check_for_yatzy(int *dice_array, int array_size, int blank) {
     printf(" Yatzy: ");
@@ -369,4 +398,9 @@ void print_array(int *array, int array_size) {
         printf("%i ", array[i]);
     }
     printf("]");
+}
+
+// compare function for qsort
+int qsort_compare(const void* a, const void* b) {
+    return (*(int*)b - *(int*)a);
 }
