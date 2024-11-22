@@ -5,6 +5,7 @@
 
 #define CARDS_IN_DECK 55
 #define JOKER_AMOUNT 3
+#define RANK_AMOUNT 13
 
 typedef enum {
     SUIT_CLUBS,
@@ -35,13 +36,17 @@ struct playing_card {
     bool is_joker;
 };
 
+// arrays for suit and rank names, ordered the same as their respective enums
+static const char *suit_names[] = {"Clubs", "Diamonds", "Hearts", "Spades"};
+static const char *rank_names[] = {"Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten","Jack", "Queen", "King", "Ace"};
+
 // prototypes ----------------------------------------------------
 void init_deck(struct playing_card deck[CARDS_IN_DECK]);
 void shuffle_deck(struct playing_card deck[CARDS_IN_DECK]);
 void order_deck(struct playing_card deck[CARDS_IN_DECK]);
 
 void print_deck(struct playing_card deck[CARDS_IN_DECK]);
-void print_card_into(struct playing_card card);
+void print_card_info(struct playing_card card);
 
 int compare_card_value(const void* a, const void* b);
 int calculate_card_value(struct playing_card card);
@@ -91,7 +96,7 @@ void shuffle_deck(struct playing_card deck[CARDS_IN_DECK]) {
 
     // for each card in the deck, swap its position with another random card
     for (int i = 0; i < CARDS_IN_DECK; i++) {
-        int j = rand() % CARDS_IN_DECK + 1;
+        int j = rand() % CARDS_IN_DECK;
 
         struct playing_card temp = deck[i];
         deck[i] = deck[j];
@@ -111,7 +116,6 @@ void print_deck(struct playing_card deck[CARDS_IN_DECK]) {
     printf("\n~~~ Deck ~~~\n\n");
     for (int i = 0; i < CARDS_IN_DECK; i++) {
         printf("%d: ", i + 1);
-        print_card_into(deck[i]);
         printf("\n");
     }
 
@@ -120,12 +124,7 @@ void print_deck(struct playing_card deck[CARDS_IN_DECK]) {
 
 
 // prints a single card
-void print_card_into(struct playing_card card) {
-
-    // arrays for suit and rank names, ordered the same as their respective enums
-    const char *suit_names[] = {"Clubs", "Diamonds", "Hearts", "Spades"};
-    const char *rank_names[] = {"Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten","Jack", "Queen", "King", "Ace"};
-
+void print_card_info(struct playing_card card) {
     // if the card is a joker nothing should be printed besides this, so the function returns after that
     if (card.is_joker) {
         printf("Joker");
@@ -133,21 +132,8 @@ void print_card_into(struct playing_card card) {
         return;
     }
 
-    // finds the suit of the card and prints the correct name based on that
-    for (suit suit = SUIT_CLUBS; suit <= SUIT_SPADES; suit++) {
-        if (card.suit == suit) {
-            printf("%s, ", suit_names[suit]);
-            break;
-        }
-    }
-
-    // finds the rank of the card and prints the correct name based on that
-    for (rank rank = RANK_TWO; rank <= RANK_ACE; rank++) {
-        if (card.rank == rank) {
-            printf("%s", rank_names[rank]);
-            break;
-        }
-    }
+    printf("%s, ", suit_names[card.suit]);
+    printf("%s", rank_names[card.rank]);
 
     printf("  [%d]", calculate_card_value(card));
 }
@@ -173,6 +159,6 @@ int calculate_card_value(struct playing_card card) {
         return CARDS_IN_DECK;
     } else {
         // the value is the suit number multiplied with the total number of ranks, with the rank number added on top
-        return (card.suit * (RANK_ACE + 1) + (card.rank + 1));
+        return ((card.suit * RANK_AMOUNT) + (card.rank + 1));
     }
 }
