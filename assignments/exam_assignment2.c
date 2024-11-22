@@ -336,8 +336,10 @@ int check_for_chance(int *dice_array, int array_size, int blank) {
 
     int points = 0;
 
+    // sorts the dice roll in descending order.
     qsort(dice_array, array_size, sizeof(int), qsort_compare);
 
+    // takes the first 5 values of the sorted array and adds their combined points. This was we always get the highest amount of points
     for (int i = 0; i < 5; i++) {
         points += dice_array[i];
     }
@@ -400,7 +402,7 @@ void print_array(int *array, int array_size) {
     printf("]");
 }
 
-// compare function for qsort
+// compare function for qsort. Used to sort numbers in descending order.
 int qsort_compare(const void* a, const void* b) {
     return (*(int*)b - *(int*)a);
 }
