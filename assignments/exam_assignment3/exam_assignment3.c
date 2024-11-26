@@ -7,10 +7,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <string.h>
 
 // !! IMPORTANT !!
-// makes sure that this points to the correct location of the file
+// make sure that this points to the correct location of the data file (relative to the compiled file)
 #define FILE_NAME "../assignments/exam_assignment3/kampe-2024-2025.txt"
 
 // constants for lengths of different things in the data. they have to be at least 1 larger than the actual limit to account for the null-string at the end
@@ -52,6 +52,8 @@ int add_match_to_team_data(Match match, Team teams[TEAM_AMOUNT]);
 int is_team_empty(Team team);
 int index_of_team(char team_name[MAX_TEAM_LENGTH], Team teams[TEAM_AMOUNT]);
 int add_team(char team_name[MAX_TEAM_LENGTH], Team teams[TEAM_AMOUNT]);
+int compare_team_order(const void* a, const void* b);
+void display_leaderboard(Team teams[TEAM_AMOUNT]);
 
 // Main -----------------------------------------------------------------------------------------------------------
 
@@ -59,11 +61,16 @@ int main() {
     Match matches[MATCH_AMOUNT];
     Team teams[TEAM_AMOUNT] = {0};
 
-    populate_match_array(matches, FILE_NAME);
+    if (populate_match_array(matches, FILE_NAME) == -1) {
+        return EXIT_FAILURE;
+    }
 
     for (int i = 0; i < MATCH_AMOUNT; i++) {
         add_match_to_team_data(matches[i], teams);
     }
+
+    qsort(teams, TEAM_AMOUNT, sizeof(teams[0]), compare_team_order);
+    display_leaderboard(teams);
 
     return EXIT_SUCCESS;
 }
@@ -95,7 +102,7 @@ int populate_match_array(Match matches[MATCH_AMOUNT], const char *filename) {
     }
 
     fclose(data);
-    return 0;
+    return 1;
 }
 
 
@@ -107,7 +114,6 @@ int add_match_to_team_data(Match match, Team teams[TEAM_AMOUNT]) {
     if (home_team_index == -1) {
         home_team_index = add_team(match.home_team, teams);
     }
-
     if (away_team_index == -1) {
         away_team_index = add_team(match.away_team, teams);
     }
@@ -133,14 +139,18 @@ int add_match_to_team_data(Match match, Team teams[TEAM_AMOUNT]) {
         teams[home_team_index].points++;
         teams[away_team_index].points++;
     }
+
+    return 1;
 }
 
 
+// returns if the team struct is empty
 int is_team_empty(Team team) {
     return team.name[0] == '\000';
 }
 
 
+// returns the index of a team in the team array based on its name. returns -1 if the team wasnt found
 int index_of_team(char team_name[MAX_TEAM_LENGTH], Team teams[TEAM_AMOUNT]) {
     for (int i = 0; i < TEAM_AMOUNT; i++) {
         if (strcmp(team_name, teams[i].name) == 0) {
@@ -152,6 +162,7 @@ int index_of_team(char team_name[MAX_TEAM_LENGTH], Team teams[TEAM_AMOUNT]) {
 }
 
 
+// finds the first empty space in the teams array, and adds a new time with the given name at that index. returns -1 if the array is full
 int add_team(char team_name[MAX_TEAM_LENGTH], Team teams[TEAM_AMOUNT]) {
     for (int i = 0; i < TEAM_AMOUNT; i++) {
         if (is_team_empty(teams[i])) {
@@ -161,4 +172,23 @@ int add_team(char team_name[MAX_TEAM_LENGTH], Team teams[TEAM_AMOUNT]) {
     }
 
     return -1; // array is full
+}
+
+
+int compare_team_order(const void* a, const void* b) {
+    Team *team_a = (Team *) a;
+    Team *team_b = (Team *) b;
+
+    if (team_a->points != team_b->points) {
+        return team_b->points - team_a->points;
+    } else {
+        return (team_b->goals_by_team - team_b->goals_against_team) - (team_a->goals_by_team - team_a->goals_against_team);
+    }
+}
+
+
+void display_leaderboard(Team teams[TEAM_AMOUNT]) {
+    for (int i = 0; i < TEAM_AMOUNT; i++) {
+        printf("%-5s %-5d %-5d %-5d\n", teams[i].name, teams[i].points, teams[i].goals_by_team, teams[i].goals_against_team);
+    }
 }
