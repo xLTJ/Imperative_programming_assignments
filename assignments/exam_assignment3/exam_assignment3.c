@@ -77,6 +77,7 @@ int main() {
 
 
 int populate_match_array(Match matches[MATCH_AMOUNT], const char *filename) {
+    // open the file and check if there are any errors doing so
     FILE *data = fopen(filename, "r");
     if (data == NULL) {
         fclose(data);
@@ -84,14 +85,17 @@ int populate_match_array(Match matches[MATCH_AMOUNT], const char *filename) {
         return -1;
     }
 
+    // the loop goes through every line in the file and formats it as a struct
     char line[DATA_LINE_LENGTH];
     int row = 0;
 
     while (fgets(line, sizeof(line), data) && row < MATCH_AMOUNT) {
-        int handled_variables = sscanf(line, "%3s %5s %5s %[^ ] - %[^ ] %d - %d %d",
+        // sscan takes the different values from the line (based on the format in the format string) and assigns them to the correct variables in the struct
+        int handled_variables = sscanf(line, "%s %s %s %s - %s %d - %d %d",
                matches[row].day, matches[row].date, matches[row].time, matches[row].home_team, matches[row].away_team,
                &matches[row].home_team_goals, &matches[row].away_team_goals, &matches[row].spectators);
 
+        // if the returned value from sscan isnt equal to the number of values, this mean something went wrong
         if (handled_variables != 8) {
             fclose(data);
             printf("Error reading data from line: %i (file: %s)\n", row + 1, filename);
@@ -179,9 +183,11 @@ int compare_team_order(const void* a, const void* b) {
     Team *team_a = (Team *) a;
     Team *team_b = (Team *) b;
 
+    // the primary sorting is based on points, the team with more points are placed before the team with less points
     if (team_a->points != team_b->points) {
         return team_b->points - team_a->points;
     } else {
+        // if they are the same, its instead based on the goal difference (goals by team - goals against team)
         return (team_b->goals_by_team - team_b->goals_against_team) - (team_a->goals_by_team - team_a->goals_against_team);
     }
 }
