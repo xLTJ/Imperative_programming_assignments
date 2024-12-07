@@ -1,10 +1,3 @@
-/*
- * Navn: Lucas Ta Jensen
- * Email: ltje24@student.aau.dk
- * Gruppe: 2
- * Studieretning: Cyber- og Computerteknologi
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
